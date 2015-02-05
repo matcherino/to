@@ -21,11 +21,10 @@
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/*
-	A helper package for converting between datatypes.
+/*Package to is a helper package for converting between datatypes.
 
-	If a certain value can not be directly converted to another, the zero value
-	of the destination type is returned instead.
+If a certain value can not be directly converted to another, the zero value
+of the destination type is returned instead.
 */
 package to
 
@@ -48,7 +47,9 @@ const (
 )
 
 const (
+	// KindTime is reserved for Time kind.
 	KindTime reflect.Kind = iota + 1000000000
+	// KindDuration is reserved for Duration kind.
 	KindDuration
 )
 
@@ -91,44 +92,79 @@ var strToDurationMatches = map[*regexp.Regexp]func([][][]byte) (time.Duration, e
 	regexp.MustCompile(`^(\-?\d+):(\d+)$`): func(m [][][]byte) (time.Duration, error) {
 		sign := 1
 
-		hrs := time.Hour * time.Duration(Int64(m[0][1]))
+		i64, err := Int64(m[0][1])
+		if err != nil {
+			return time.Duration(0), err
+		}
+
+		hrs := time.Hour * time.Duration(i64)
 
 		if hrs < 0 {
 			hrs = -1 * hrs
 			sign = -1
 		}
 
-		min := time.Minute * time.Duration(Int64(m[0][2]))
+		i64, err = Int64(m[0][2])
+		if err != nil {
+			return time.Duration(0), err
+		}
+		min := time.Minute * time.Duration(i64)
 
 		return time.Duration(sign) * (hrs + min), nil
 	},
 	regexp.MustCompile(`^(\-?\d+):(\d+):(\d+)$`): func(m [][][]byte) (time.Duration, error) {
 		sign := 1
 
-		hrs := time.Hour * time.Duration(Int64(m[0][1]))
+		i64, err := Int64(m[0][1])
+		if err != nil {
+			return time.Duration(0), err
+		}
+		hrs := time.Hour * time.Duration(i64)
 
 		if hrs < 0 {
 			hrs = -1 * hrs
 			sign = -1
 		}
 
-		min := time.Minute * time.Duration(Int64(m[0][2]))
-		sec := time.Second * time.Duration(Int64(m[0][3]))
+		i64, err = Int64(m[0][2])
+		if err != nil {
+			return time.Duration(0), err
+		}
+		min := time.Minute * time.Duration(i64)
+
+		i64, err = Int64(m[0][3])
+		if err != nil {
+			return time.Duration(0), err
+		}
+		sec := time.Second * time.Duration(i64)
 
 		return time.Duration(sign) * (hrs + min + sec), nil
 	},
 	regexp.MustCompile(`^(\-?\d+):(\d+):(\d+).(\d+)$`): func(m [][][]byte) (time.Duration, error) {
 		sign := 1
 
-		hrs := time.Hour * time.Duration(Int64(m[0][1]))
+		i64, err := Int64(m[0][1])
+		if err != nil {
+			return time.Duration(0), err
+		}
+		hrs := time.Hour * time.Duration(i64)
 
 		if hrs < 0 {
 			hrs = -1 * hrs
 			sign = -1
 		}
 
-		min := time.Minute * time.Duration(Int64(m[0][2]))
-		sec := time.Second * time.Duration(Int64(m[0][3]))
+		i64, err = Int64(m[0][2])
+		if err != nil {
+			return time.Duration(0), err
+		}
+		min := time.Minute * time.Duration(i64)
+
+		i64, err = Int64(m[0][3])
+		if err != nil {
+			return time.Duration(0), err
+		}
+		sec := time.Second * time.Duration(i64)
 		lst := m[0][4]
 
 		for len(lst) < 9 {
@@ -136,34 +172,32 @@ var strToDurationMatches = map[*regexp.Regexp]func([][][]byte) (time.Duration, e
 		}
 		lst = lst[0:9]
 
-		return time.Duration(sign) * (hrs + min + sec + time.Duration(Int64(lst))), nil
+		i64, err = Int64(lst)
+		if err != nil {
+			return time.Duration(0), err
+		}
+		return time.Duration(sign) * (hrs + min + sec + time.Duration(i64)), nil
 	},
 }
 
-func strToDuration(v string) time.Duration {
-
+func strToDuration(v string) (time.Duration, error) {
 	var err error
 	var d time.Duration
 
 	d, err = time.ParseDuration(v)
-
 	if err == nil {
-		return d
+		return d, nil
 	}
 
 	b := []byte(v)
-
 	for re, fn := range strToDurationMatches {
 		m := re.FindAllSubmatch(b, -1)
 		if m != nil {
-			r, err := fn(m)
-			if err == nil {
-				return r
-			}
+			return fn(m)
 		}
 	}
 
-	return time.Duration(0)
+	return time.Duration(0), fmt.Errorf("Could not convert %q to Duration", v)
 }
 
 func uint64ToBytes(v uint64) []byte {
@@ -233,60 +267,49 @@ func complex128ToBytes(v complex128) []byte {
 	return buf
 }
 
-/*
-	Converts a date string into a time.Time value, several date formats are tried.
-*/
-func Time(val interface{}) time.Time {
-	switch t := val.(type) {
-	// We could use this later.
-	default:
-		s := String(t)
-		for _, format := range strToTimeFormats {
-			r, err := time.ParseInLocation(format, s, time.Local)
-			if err == nil {
-				return r
-			}
+// Time converts a date string into a time.Time value, several date formats are tried.
+func Time(val interface{}) (time.Time, error) {
+	s := String(val)
+	for _, format := range strToTimeFormats {
+		r, err := time.ParseInLocation(format, s, time.Local)
+		if err == nil {
+			return r, nil
 		}
 	}
-	return time.Time{}
+
+	return time.Time{}, fmt.Errorf("Could not convert %q to Time", val)
 }
 
-/*
-	Tries to convert the argument into a time.Duration value. Returns
-	time.Duration(0) if any error occurs.
-*/
-func Duration(val interface{}) time.Duration {
+// Duration tries to convert the argument into a time.Duration value. Returns
+// time.Duration(0) if any error occurs.
+func Duration(val interface{}) (time.Duration, error) {
 	switch t := val.(type) {
 	case int:
-		return time.Duration(int64(t))
+		return time.Duration(int64(t)), nil
 	case int8:
-		return time.Duration(int64(t))
+		return time.Duration(int64(t)), nil
 	case int16:
-		return time.Duration(int64(t))
+		return time.Duration(int64(t)), nil
 	case int32:
-		return time.Duration(int64(t))
+		return time.Duration(int64(t)), nil
 	case int64:
-		return time.Duration(t)
+		return time.Duration(t), nil
 	case uint:
-		return time.Duration(int64(t))
+		return time.Duration(int64(t)), nil
 	case uint8:
-		return time.Duration(int64(t))
+		return time.Duration(int64(t)), nil
 	case uint16:
-		return time.Duration(int64(t))
+		return time.Duration(int64(t)), nil
 	case uint32:
-		return time.Duration(int64(t))
+		return time.Duration(int64(t)), nil
 	case uint64:
-		return time.Duration(int64(t))
-	default:
-		return strToDuration(String(val))
+		return time.Duration(int64(t)), nil
 	}
-	panic("Reached")
+	return strToDuration(String(val))
 }
 
-/*
-	Tries to convert the argument into a []byte array. Returns []byte{} if any
-	error occurs.
-*/
+// Bytes tries to convert the argument into a []byte array. Returns []byte{} if any
+// error occurs.
 func Bytes(val interface{}) []byte {
 
 	if val == nil {
@@ -340,62 +363,54 @@ func Bytes(val interface{}) []byte {
 	case []byte:
 		return t
 
-	default:
-		return []byte(fmt.Sprintf("%v", val))
 	}
 
-	panic("Reached.")
+	return []byte(fmt.Sprintf("%v", val))
 }
 
-/*
-	Tries to convert the argument into a string. Returns "" if any error occurs.
-*/
+// String tries to convert the argument into a string. Returns "" if any error occurs.
 func String(val interface{}) string {
-	var buf []byte
-
 	if val == nil {
 		return ""
 	}
 
 	switch t := val.(type) {
-
 	case int:
-		buf = int64ToBytes(int64(t))
+		return strconv.Itoa(t)
 	case int8:
-		buf = int64ToBytes(int64(t))
+		return strconv.FormatInt(int64(t), 10)
 	case int16:
-		buf = int64ToBytes(int64(t))
+		return strconv.FormatInt(int64(t), 10)
 	case int32:
-		buf = int64ToBytes(int64(t))
+		return strconv.FormatInt(int64(t), 10)
 	case int64:
-		buf = int64ToBytes(int64(t))
+		return strconv.FormatInt(t, 10)
 
 	case uint:
-		buf = uint64ToBytes(uint64(t))
+		return strconv.FormatUint(uint64(t), 10)
 	case uint8:
-		buf = uint64ToBytes(uint64(t))
+		return strconv.FormatUint(uint64(t), 10)
 	case uint16:
-		buf = uint64ToBytes(uint64(t))
+		return strconv.FormatUint(uint64(t), 10)
 	case uint32:
-		buf = uint64ToBytes(uint64(t))
+		return strconv.FormatUint(uint64(t), 10)
 	case uint64:
-		buf = uint64ToBytes(uint64(t))
+		return strconv.FormatUint(t, 10)
 
 	case float32:
-		buf = float32ToBytes(t)
+		return strconv.FormatFloat(float64(t), 'g', -1, 32)
 	case float64:
-		buf = float64ToBytes(t)
+		return strconv.FormatFloat(t, 'g', -1, 64)
 
 	case complex128:
-		buf = complex128ToBytes(t)
+		return string(complex128ToBytes(t))
 	case complex64:
-		buf = complex128ToBytes(complex128(t))
+		return string(complex128ToBytes(complex128(t)))
 
 	case bool:
-		if val.(bool) == true {
+		if t {
 			return "true"
 		}
-
 		return "false"
 
 	case string:
@@ -404,11 +419,8 @@ func String(val interface{}) string {
 	case []byte:
 		return string(t)
 
-	default:
-		return fmt.Sprintf("%v", val)
 	}
-
-	return string(buf)
+	return fmt.Sprintf("%v", val)
 }
 
 /*
@@ -464,151 +476,138 @@ func Map(val interface{}) map[string]interface{} {
 }
 */
 
-/*
-	Tries to convert the argument into an int64. Returns int64(0) if any error
-	occurs.
-*/
-func Int64(val interface{}) int64 {
+// Int64 tries to convert the argument into an int64. Returns int64(0) if any error
+// occurs.
+func Int64(val interface{}) (int64, error) {
 
 	switch t := val.(type) {
 	case int:
-		return int64(t)
+		return int64(t), nil
 	case int8:
-		return int64(t)
+		return int64(t), nil
 	case int16:
-		return int64(t)
+		return int64(t), nil
 	case int32:
-		return int64(t)
+		return int64(t), nil
 	case int64:
-		return int64(t)
+		return int64(t), nil
 	case uint:
-		return int64(t)
+		return int64(t), nil
 	case uint8:
-		return int64(t)
+		return int64(t), nil
 	case uint16:
-		return int64(t)
+		return int64(t), nil
 	case uint32:
-		return int64(t)
+		return int64(t), nil
 	case uint64:
-		return int64(t)
+		return int64(t), nil
 	case bool:
 		if t == true {
-			return int64(1)
+			return int64(1), nil
 		}
-		return int64(0)
+		return int64(0), nil
 	case float32:
-		return int64(t)
+		return int64(t), nil
 	case float64:
-		return int64(t)
-	default:
-		i, _ := strconv.ParseInt(String(val), 10, 64)
-		return i
-	}
-
-	panic("Reached")
-
-}
-
-/*
-	Tries to convert the argument into an uint64. Returns uint64(0) if any error
-	occurs.
-*/
-func Uint64(val interface{}) uint64 {
-
-	switch t := val.(type) {
-	case int:
-		return uint64(t)
-	case int8:
-		return uint64(t)
-	case int16:
-		return uint64(t)
-	case int32:
-		return uint64(t)
-	case int64:
-		return uint64(t)
-	case uint:
-		return uint64(t)
-	case uint8:
-		return uint64(t)
-	case uint16:
-		return uint64(t)
-	case uint32:
-		return uint64(t)
-	case uint64:
-		return uint64(t)
-	case float32:
-		return uint64(t)
-	case float64:
-		return uint64(t)
-	case bool:
-		if t == true {
-			return uint64(1)
-		}
-		return uint64(0)
-	default:
-		i, _ := strconv.ParseUint(String(val), 10, 64)
-		return i
-	}
-
-	panic("Reached")
-
-}
-
-/*
-	Tries to convert the argument into a float64. Returns float64(0.0) if any
-	error occurs.
-*/
-func Float64(val interface{}) float64 {
-
-	switch t := val.(type) {
-	case int:
-		return float64(t)
-	case int8:
-		return float64(t)
-	case int16:
-		return float64(t)
-	case int32:
-		return float64(t)
-	case int64:
-		return float64(t)
-	case uint:
-		return float64(t)
-	case uint8:
-		return float64(t)
-	case uint16:
-		return float64(t)
-	case uint32:
-		return float64(t)
-	case uint64:
-		return float64(t)
-	case float32:
-		return float64(t)
-	case float64:
-		return float64(t)
-	case bool:
-		if t == true {
-			return float64(1)
-		}
-		return float64(0)
+		return int64(t), nil
 	case string:
-		f, _ := strconv.ParseFloat(val.(string), 64)
-		return f
+		return strconv.ParseInt(t, 10, 64)
+	case []byte:
+		return strconv.ParseInt(string(t), 10, 64)
 	}
 
-	panic("Reached")
+	return 0, fmt.Errorf("Could not convert %q to int64 %T", val, val)
 }
 
-/*
-	Tries to convert the argument into a bool. Returns false if any error occurs.
-*/
-func Bool(value interface{}) bool {
-	b, _ := strconv.ParseBool(String(value))
-	return b
+// Uint64 tries to convert the argument into an uint64. Returns uint64(0) if any error
+// occurs.
+func Uint64(val interface{}) (uint64, error) {
+
+	switch t := val.(type) {
+	case int:
+		return uint64(t), nil
+	case int8:
+		return uint64(t), nil
+	case int16:
+		return uint64(t), nil
+	case int32:
+		return uint64(t), nil
+	case int64:
+		return uint64(t), nil
+	case uint:
+		return uint64(t), nil
+	case uint8:
+		return uint64(t), nil
+	case uint16:
+		return uint64(t), nil
+	case uint32:
+		return uint64(t), nil
+	case uint64:
+		return uint64(t), nil
+	case float32:
+		return uint64(t), nil
+	case float64:
+		return uint64(t), nil
+	case bool:
+		if t == true {
+			return uint64(1), nil
+		}
+		return uint64(0), nil
+	case string:
+		return strconv.ParseUint(t, 10, 64)
+	}
+
+	return 0, fmt.Errorf("Could not convert %q to uint64", val)
 }
 
-/*
-	Tries to convert the argument into a reflect.Kind element.
-*/
+// Float64 tries to convert the argument into a float64. Returns float64(0.0) if any
+// error occurs.
+func Float64(val interface{}) (float64, error) {
+
+	switch t := val.(type) {
+	case int:
+		return float64(t), nil
+	case int8:
+		return float64(t), nil
+	case int16:
+		return float64(t), nil
+	case int32:
+		return float64(t), nil
+	case int64:
+		return float64(t), nil
+	case uint:
+		return float64(t), nil
+	case uint8:
+		return float64(t), nil
+	case uint16:
+		return float64(t), nil
+	case uint32:
+		return float64(t), nil
+	case uint64:
+		return float64(t), nil
+	case float32:
+		return float64(t), nil
+	case float64:
+		return float64(t), nil
+	case bool:
+		if t == true {
+			return float64(1), nil
+		}
+		return float64(0), nil
+	case string:
+		return strconv.ParseFloat(val.(string), 64)
+	default:
+		return 0, fmt.Errorf("Inconvertible float type %T", t)
+	}
+}
+
+// Bool tries to convert the argument into a bool. Returns false if any error occurs.
+func Bool(value interface{}) (bool, error) {
+	s := String(value)
+	return strconv.ParseBool(s)
+}
+
+// Convert tries to convert the argument into a reflect.Kind element.
 func Convert(value interface{}, t reflect.Kind) (interface{}, error) {
 
 	switch reflect.TypeOf(value).Kind() {
@@ -617,9 +616,8 @@ func Convert(value interface{}, t reflect.Kind) (interface{}, error) {
 		case reflect.String:
 			if reflect.TypeOf(value).Elem().Kind() == reflect.Uint8 {
 				return string(value.([]byte)), nil
-			} else {
-				return String(value), nil
 			}
+			return String(value), nil
 		case reflect.Slice:
 		default:
 			return nil, fmt.Errorf("Could not convert slice into non-slice.")
@@ -637,53 +635,88 @@ func Convert(value interface{}, t reflect.Kind) (interface{}, error) {
 		return String(value), nil
 
 	case reflect.Uint64:
-		return Uint64(value), nil
+		return Uint64(value)
 
 	case reflect.Uint32:
-		return uint32(Uint64(value)), nil
+		u, err := Uint64(value)
+		if err != nil {
+			return 0, err
+		}
+		return uint32(u), nil
 
 	case reflect.Uint16:
-		return uint16(Uint64(value)), nil
+		u, err := Uint64(value)
+		if err != nil {
+			return 0, err
+		}
+		return uint16(u), nil
 
 	case reflect.Uint8:
-		return uint8(Uint64(value)), nil
+		u, err := Uint64(value)
+		if err != nil {
+			return 0, err
+		}
+		return uint8(u), nil
 
 	case reflect.Uint:
-		return uint(Uint64(value)), nil
+		u, err := Uint64(value)
+		if err != nil {
+			return 0, err
+		}
+		return uint(u), nil
 
 	case reflect.Int64:
-		return int64(Int64(value)), nil
+		return Int64(value)
 
 	case reflect.Int32:
-		return int32(Int64(value)), nil
+		u, err := Int64(value)
+		if err != nil {
+			return 0, err
+		}
+		return int32(u), nil
 
 	case reflect.Int16:
-		return int16(Int64(value)), nil
+		u, err := Int64(value)
+		if err != nil {
+			return 0, err
+		}
+		return int16(u), nil
 
 	case reflect.Int8:
-		return int8(Int64(value)), nil
+		u, err := Int64(value)
+		if err != nil {
+			return 0, err
+		}
+		return int8(u), nil
 
 	case reflect.Int:
-		return int(Int64(value)), nil
+		u, err := Int64(value)
+		if err != nil {
+			return 0, err
+		}
+		return int(u), nil
 
 	case reflect.Float64:
-		return Float64(value), nil
+		return Float64(value)
 
 	case reflect.Float32:
-		return float32(Float64(value)), nil
+		f, err := Float64(value)
+		if err != nil {
+			return 0, err
+		}
+		return float32(f), nil
 
 	case reflect.Bool:
-		return Bool(value), nil
+		return Bool(value)
 
 	case reflect.Interface:
 		return value, nil
 
 	case KindTime:
-		return Time(value), nil
+		return Time(value)
 
 	case KindDuration:
-		return Duration(value), nil
-
+		return Duration(value)
 	}
 
 	return nil, fmt.Errorf("Could not convert %s into %s.", reflect.TypeOf(value).Kind(), t)

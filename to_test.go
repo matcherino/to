@@ -66,31 +66,31 @@ func TestToString(t *testing.T) {
 
 func TestToBytes(t *testing.T) {
 
-	if String(Bytes(0)) != "0" {
+	if string(Bytes(0)) != "0" {
 		t.Fatalf("Test failed.")
 	}
-	if String(Bytes(-0)) != "0" {
+	if string(Bytes(-0)) != "0" {
 		t.Fatalf("Test failed.")
 	}
-	if String(Bytes(1)) != "1" {
+	if string(Bytes(1)) != "1" {
 		t.Fatalf("Test failed.")
 	}
-	if String(Bytes(-1)) != "-1" {
+	if string(Bytes(-1)) != "-1" {
 		t.Fatalf("Test failed.")
 	}
-	if String(Bytes(10)) != "10" {
+	if string(Bytes(10)) != "10" {
 		t.Fatalf("Test failed.")
 	}
-	if String(Bytes(-10)) != "-10" {
+	if string(Bytes(-10)) != "-10" {
 		t.Fatalf("Test failed.")
 	}
-	if String(Bytes(int64(9223372036854775807))) != "9223372036854775807" {
+	if string(Bytes(int64(9223372036854775807))) != "9223372036854775807" {
 		t.Fatalf("Test failed.")
 	}
-	if String(Bytes(int64(-9223372036854775807))) != "-9223372036854775807" {
+	if string(Bytes(int64(-9223372036854775807))) != "-9223372036854775807" {
 		t.Fatalf("Test failed.")
 	}
-	if String(Bytes(uint64(18446744073709551615))) != "18446744073709551615" {
+	if string(Bytes(uint64(18446744073709551615))) != "18446744073709551615" {
 		t.Fatalf("Test failed.")
 	}
 
@@ -151,67 +151,67 @@ func TestBytes(t *testing.T) {
 }
 
 func TestIntegers(t *testing.T) {
-	if Int64(1) != int64(1) {
+	if i, _ := Int64(1); i != int64(1) {
 		t.Fatalf("Test failed.")
 	}
-	if Int64(-1) != int64(-1) {
+	if i, _ := Int64(-1); i != int64(-1) {
 		t.Fatalf("Test failed.")
 	}
-	if int32(Int64(true)) != int32(1) {
+	if i, _ := Int64(true); int32(i) != int32(1) {
 		t.Fatalf("Test failed.")
 	}
-	if int32(Int64(false)) != int32(0) {
+	if i, _ := Int64(false); int32(i) != int32(0) {
 		t.Fatalf("Test failed.")
 	}
-	if int32(Int64("123")) != int32(123) {
+	if i, _ := Int64("123"); int32(i) != int32(123) {
 		t.Fatalf("Test failed.")
 	}
-	if uint32(Uint64("123")) != uint32(123) {
+	if u, _ := Uint64("123"); uint32(u) != uint32(123) {
 		t.Fatalf("Test failed.")
 	}
-	if uint32(Uint64("0")) != uint32(0) {
+	if u, _ := Uint64("0"); uint32(u) != uint32(0) {
 		t.Fatalf("Test failed.")
 	}
-	if uint(Uint64(5)) != uint(5) {
+	if u, _ := Uint64(5); uint(u) != uint(5) {
 		t.Fatalf("Test failed.")
 	}
-	if uint(Uint64(5.1)) != uint(5) {
+	if u, _ := Uint64(5.1); uint(u) != uint(5) {
 		t.Fatalf("Test failed.")
 	}
-	if int8(Uint64(6.1)) != int8(6) {
+	if u, _ := Uint64(6.1); int8(u) != int8(6) {
 		t.Fatalf("Test failed.")
 	}
 }
 
 func TestFloat(t *testing.T) {
-	if float32(Float64(1)) != float32(1) {
+	if f, _ := Float64(1); float32(f) != float32(1) {
 		t.Fatalf("Test failed.")
 	}
-	if float32(Float64(1.2)) != float32(1.2) {
+	if f, _ := Float64(1.2); float32(f) != float32(1.2) {
 		t.Fatalf("Test failed.")
 	}
-	if Float64(-11.2) != float64(-11.2) {
+	if f, _ := Float64(-11.2); float64(f) != float64(-11.2) {
 		t.Fatalf("Test failed.")
 	}
-	if Float64("-11.2") != float64(-11.2) {
+	if f, _ := Float64("-11.2"); float64(f) != float64(-11.2) {
 		t.Fatalf("Test failed.")
 	}
 }
 
 func TestBool(t *testing.T) {
-	if Bool("t") != true {
+	if b, e := Bool("t"); e != nil || b != true {
 		t.Fatalf("Test failed.")
 	}
-	if Bool("FALSE") != false {
+	if b, e := Bool("FALSE"); e != nil || b != false {
 		t.Fatalf("Test failed.")
 	}
-	if Bool("0") != false {
+	if b, e := Bool("0"); e != nil || b != false {
 		t.Fatalf("Test failed.")
 	}
-	if Bool("1") != true {
+	if b, e := Bool("1"); e != nil || b != true {
 		t.Fatalf("Test failed.")
 	}
-	if Bool(1) != true {
+	if b, e := Bool(1); e != nil || b != true {
 		t.Fatalf("Test failed.")
 	}
 }
@@ -308,83 +308,86 @@ func TestConvert(t *testing.T) {
 }
 
 func TestTimeDuration(t *testing.T) {
-	if Duration(123) != time.Duration(123) {
+	if d, _ := Duration(123); d != time.Duration(123) {
 		t.Fatalf("Test failed.")
 	}
-	if Duration("12s37ms") != time.Second*12+time.Millisecond*37 {
+	if d, _ := Duration("12s37ms"); d != time.Second*12+time.Millisecond*37 {
 		t.Fatalf("Test failed.")
 	}
-	if Duration("13:37") != time.Hour*13+time.Minute*37 {
+	if d, _ := Duration("13:37"); d != time.Hour*13+time.Minute*37 {
 		t.Fatalf("Test failed.")
 	}
-	if Duration("-13:37") != -(time.Hour*13 + time.Minute*37) {
+	if d, _ := Duration("-13:37"); d != -(time.Hour*13 + time.Minute*37) {
 		t.Fatalf("Test failed.")
 	}
-	if Duration("13:37:21") != time.Hour*13+time.Minute*37+time.Second*21 {
+	if d, _ := Duration("13:37:21"); d != time.Hour*13+time.Minute*37+time.Second*21 {
 		t.Fatalf("Test failed.")
 	}
-	if Duration("13:37:21.456123") != time.Hour*13+time.Minute*37+time.Second*21+time.Microsecond*456123 {
+	if d, _ := Duration("13:37:21.456123"); d != time.Hour*13+time.Minute*37+time.Second*21+time.Microsecond*456123 {
 		t.Fatalf("Test failed.")
 	}
-	if Duration("13:37:21.4561231") != time.Hour*13+time.Minute*37+time.Second*21+456123100 {
+	if d, _ := Duration("13:37:21.4561231"); d != time.Hour*13+time.Minute*37+time.Second*21+456123100 {
 		t.Fatalf("Test failed.")
 	}
-	if Duration("13:37:21.456123789") != time.Hour*13+time.Minute*37+time.Second*21+time.Nanosecond*456123789 {
+	if d, _ := Duration("13:37:21.456123789"); d != time.Hour*13+time.Minute*37+time.Second*21+time.Nanosecond*456123789 {
 		t.Fatalf("Test failed.")
 	}
-	if Duration("13:37:21.456123789999") != time.Hour*13+time.Minute*37+time.Second*21+time.Nanosecond*456123789 {
+	if d, _ := Duration("13:37:21.456123789999"); d != time.Hour*13+time.Minute*37+time.Second*21+time.Nanosecond*456123789 {
 		t.Fatalf("Test failed.")
 	}
-	if Duration("-13:37:21.456123789999") != -(time.Hour*13 + time.Minute*37 + time.Second*21 + time.Nanosecond*456123789) {
+	if d, _ := Duration("-13:37:21.456123789999"); d != -(time.Hour*13 + time.Minute*37 + time.Second*21 + time.Nanosecond*456123789) {
 		t.Fatalf("Test failed.")
 	}
-	if Duration("abc") != time.Duration(0) {
+	if _, err := Duration("abc"); err == nil {
 		t.Fatalf("Test failed.")
 	}
 }
 
 func TestDate(t *testing.T) {
-	if time.Date(2012, 3, 24, 0, 0, 0, 0, time.Local).Equal(Time("2012-03-24")) != true {
+	if tt, _ := Time("2012-03-24"); time.Date(2012, 3, 24, 0, 0, 0, 0, time.Local).Equal(tt) != true {
 		t.Fatalf("Test failed.")
 	}
-	if time.Date(2012, 3, 24, 0, 0, 0, 0, time.Local).Equal(Time("2012/03/24")) != true {
+	if tt, _ := Time("2012/03/24"); time.Date(2012, 3, 24, 0, 0, 0, 0, time.Local).Equal(tt) != true {
 		t.Fatalf("Test failed.")
 	}
-	if time.Date(2012, 3, 24, 23, 13, 37, 0, time.Local).Equal(Time("2012-03-24 23:13:37")) != true {
+	if tt, _ := Time("2012-03-24 23:13:37"); time.Date(2012, 3, 24, 23, 13, 37, 0, time.Local).Equal(tt) != true {
 		t.Fatalf("Test failed.")
 	}
-	if time.Date(2012, 3, 24, 23, 13, 37, 123, time.Local).Equal(Time("2012-03-24 23:13:37.000000123")) != true {
+	if tt, _ := Time("2012-03-24 23:13:37.000000123"); time.Date(2012, 3, 24, 23, 13, 37, 123, time.Local).Equal(tt) != true {
 		t.Fatalf("Test failed.")
 	}
-	if time.Date(2012, 3, 24, 23, 13, 37, 0, time.Local).Equal(Time("03/24/2012 23:13:37")) != true {
+	if tt, _ := Time("03/24/2012 23:13:37"); time.Date(2012, 3, 24, 23, 13, 37, 0, time.Local).Equal(tt) != true {
 		t.Fatalf("Test failed.")
 	}
-	if time.Date(2012, 3, 24, 23, 13, 37, 123, time.Local).Equal(Time("03/24/12 23:13:37.000000123")) != true {
+	if tt, _ := Time("03/24/12 23:13:37.000000123"); time.Date(2012, 3, 24, 23, 13, 37, 123, time.Local).Equal(tt) != true {
 		t.Fatalf("Test failed.")
 	}
-	if time.Date(2012, 3, 24, 23, 13, 37, 0, time.Local).Equal(Time("24/Mar/2012 23:13:37")) != true {
+	if tt, _ := Time("24/Mar/2012 23:13:37"); time.Date(2012, 3, 24, 23, 13, 37, 0, time.Local).Equal(tt) != true {
 		t.Fatalf("Test failed.")
 	}
-	if time.Date(2012, 3, 24, 0, 0, 0, 0, time.Local).Equal(Time("Mar 24, 2012")) != true {
+	if tt, _ := Time("Mar 24, 2012"); time.Date(2012, 3, 24, 0, 0, 0, 0, time.Local).Equal(tt) != true {
 		t.Fatalf("Test failed.")
 	}
-	if time.Date(2012, 3, 24, 23, 13, 37, 123000000, time.UTC).Equal(Time("2012-03-24T23:13:37.123Z")) != true {
+	if tt, _ := Time("2012-03-24T23:13:37.123Z"); time.Date(2012, 3, 24, 23, 13, 37, 123000000, time.UTC).Equal(tt) != true {
 		t.Fatalf("Test failed.")
 	}
-	if time.Date(2012, 3, 24, 23, 13, 37, 123456789, time.UTC).Equal(Time("2012-03-24T23:13:37.123456789Z")) != true {
+	if tt, _ := Time("2012-03-24T23:13:37.123456789Z"); time.Date(2012, 3, 24, 23, 13, 37, 123456789, time.UTC).Equal(tt) != true {
+		t.Fatalf("Test failed.")
+	}
+	if _, err := Time("abc"); err == nil {
 		t.Fatalf("Test failed.")
 	}
 }
 
 func BenchmarkFmtIntToString(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		fmt.Sprintf("%s", 1)
+		fmt.Sprintf("%d", 1)
 	}
 }
 
 func BenchmarkFmtFloatToString(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		fmt.Sprintf("%s", 1.1)
+		fmt.Sprintf("%f", 1.1)
 	}
 }
 
@@ -396,7 +399,7 @@ func BenchmarkStrconvIntToString(b *testing.B) {
 
 func BenchmarkStrconvFloatToString(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		strconv.FormatFloat(1.1, 'f', 2, 64)
+		strconv.FormatFloat(1.1, 'g', -1, 64)
 	}
 }
 
