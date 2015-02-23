@@ -423,16 +423,22 @@ func String(val interface{}) string {
 	return fmt.Sprintf("%v", val)
 }
 
-/*
-// Lets wait until Go 1.1
-func List(val interface{}) []interface{} {
+// Slice ...
+func Slice(val interface{}) ([]interface{}, error) {
+	if si, ok := val.([]interface{}); ok {
+		return si, nil
+	}
+
 	list := []interface{}{}
 
 	if val == nil {
-		return list
+		return list, nil
 	}
 
 	switch reflect.TypeOf(val).Kind() {
+	default:
+		return nil, fmt.Errorf("Could not convert %q to Slice", val)
+
 	case reflect.Slice:
 		vval := reflect.ValueOf(val)
 
@@ -444,37 +450,37 @@ func List(val interface{}) []interface{} {
 			vlist.Index(i).Set(vval.Index(i))
 		}
 
-		return list
+		return list, nil
 	}
-
-	return list
 }
 
-// Lets wait until Go 1.1
-func Map(val interface{}) map[string]interface{} {
+// Map ...
+func Map(val interface{}) (map[string]interface{}, error) {
+	if msi, ok := val.(map[string]interface{}); ok {
+		return msi, nil
+	}
 
-	list := map[string]interface{}{}
+	m := map[string]interface{}{}
 
 	if val == nil {
-		return list
+		return m, nil
 	}
 
 	switch reflect.TypeOf(val).Kind() {
+	default:
+		return nil, fmt.Errorf("Could not convert %q to Map", val)
 	case reflect.Map:
 		vval := reflect.ValueOf(val)
-		vlist := reflect.ValueOf(list)
+		vlist := reflect.ValueOf(m)
 
 		for _, vkey := range vval.MapKeys() {
 			key := String(vkey.Interface())
 			vlist.SetMapIndex(reflect.ValueOf(key), vval.MapIndex(vkey))
 		}
 
-		return list
+		return m, nil
 	}
-
-	return list
 }
-*/
 
 // Int64 tries to convert the argument into an int64. Returns int64(0) if any error
 // occurs.

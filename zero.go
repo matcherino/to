@@ -47,6 +47,24 @@ func ZeroFloat(v interface{}) float64 {
 	return f
 }
 
+// ZeroMap converts v to map[string]interface{} or returns val.
+func ZeroMap(v interface{}) map[string]interface{} {
+	m, err := Map(v)
+	if err != nil {
+		return map[string]interface{}{}
+	}
+	return m
+}
+
+// ZeroSlice converts v to []interface{} or returns val.
+func ZeroSlice(v interface{}, val []interface{}) []interface{} {
+	sli, err := Slice(v)
+	if err != nil {
+		return []interface{}{}
+	}
+	return sli
+}
+
 // ZeroString converts v to string or returns ""
 func ZeroString(v interface{}) string {
 	return String(v)

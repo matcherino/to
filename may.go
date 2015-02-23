@@ -47,6 +47,24 @@ func MayFloat(v interface{}, val float64) float64 {
 	return f
 }
 
+// MayMap converts v to map[string]interface{} or returns val.
+func MayMap(v interface{}, val map[string]interface{}) map[string]interface{} {
+	m, err := Map(v)
+	if err != nil {
+		return val
+	}
+	return m
+}
+
+// MaySlice converts v to []interface{} or returns val.
+func MaySlice(v interface{}, val []interface{}) []interface{} {
+	sli, err := Slice(v)
+	if err != nil {
+		return val
+	}
+	return sli
+}
+
 // MayString converts v to string or returns ""
 func MayString(v interface{}) string {
 	return String(v)
