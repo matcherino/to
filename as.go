@@ -20,7 +20,7 @@ func AsDuration(v interface{}) time.Duration {
 	return d
 }
 
-// AsInt converts v to int64 or returns 0.
+// AsInt converts v to int or returns 0.
 func AsInt(v interface{}) int {
 	i, err := Int64(v)
 	if err != nil {
